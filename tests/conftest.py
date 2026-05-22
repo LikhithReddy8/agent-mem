@@ -43,6 +43,16 @@ async def db(test_engine):
         await session.rollback()
 
 
+@pytest.fixture(autouse=True)
+async def clean_tables(test_engine):
+    """Truncate all tables before each test to ensure isolation."""
+    yield
+    async with test_engine.begin() as conn:
+        await conn.execute(text(
+            "TRUNCATE TABLE memories, file_index, sessions, workspaces RESTART IDENTITY CASCADE"
+        ))
+
+
 @pytest.fixture
 async def client(test_engine):
     from api.main import app
