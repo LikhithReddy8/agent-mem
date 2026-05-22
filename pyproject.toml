@@ -1,0 +1,15 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "agent-mem"
+version = "0.1.0"
+requires-python = ">=3.13"
+
+[project.scripts]
+mem = "cli.main:app"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["api*", "mcp*", "cli*", "hooks*"]
