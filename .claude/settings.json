@@ -1,0 +1,25 @@
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/likhithr/Projects/agent_mem/.venv/bin/python /Users/likhithr/Projects/agent_mem/hooks/session_start.py"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/likhithr/Projects/agent_mem/.venv/bin/python /Users/likhithr/Projects/agent_mem/hooks/session_end.py"
+          }
+        ]
+      }
+    ]
+  }
+}
