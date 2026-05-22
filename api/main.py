@@ -5,7 +5,7 @@ from .embeddings import get_embedder
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(_app: FastAPI):
     get_embedder()  # warm up model at startup so first request isn't slow
     yield
 
