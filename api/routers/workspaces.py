@@ -1,9 +1,10 @@
+import uuid
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 from ..db import get_db
-from ..models import Workspace
+from ..models import Workspace, Session, Memory, FileIndex
 from ..schemas import WorkspaceCreate, WorkspaceResponse
 
 router = APIRouter(prefix="/workspaces", tags=["workspaces"])
@@ -26,3 +27,17 @@ async def create_workspace(body: WorkspaceCreate, db: AsyncSession = Depends(get
 async def list_workspaces(db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Workspace).order_by(Workspace.created_at.desc()))
     return result.scalars().all()
+
+
+@router.delete("/{workspace_id}", status_code=204)
+async def delete_workspace(workspace_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Workspace).where(Workspace.id == workspace_id))
+    ws = result.scalar_one_or_none()
+    if not ws:
+        raise HTTPException(status_code=404, detail="Workspace not found")
+    # delete child records in FK order before removing the workspace
+    await db.execute(delete(Memory).where(Memory.workspace_id == workspace_id))
+    await db.execute(delete(FileIndex).where(FileIndex.workspace_id == workspace_id))
+    await db.execute(delete(Session).where(Session.workspace_id == workspace_id))
+    await db.delete(ws)
+    await db.commit()

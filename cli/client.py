@@ -49,6 +49,10 @@ class MemClient:
         with self._c() as c:
             return c.post("/workspaces", json={"name": name, "path": path, "language": language}).json()
 
+    def delete_workspace(self, workspace_id: str) -> bool:
+        with self._c() as c:
+            return c.delete(f"/workspaces/{workspace_id}").status_code == 204
+
     def list_sessions(self, workspace_id: str | None = None) -> list:
         with self._c() as c:
             params = {"workspace_id": workspace_id} if workspace_id else {}

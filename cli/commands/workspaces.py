@@ -101,3 +101,29 @@ def list_workspaces():
     for w in workspaces:
         table.add_row(w["id"][:8], w["name"], w["path"], w.get("language") or "", w["created_at"][:10])
     console.print(table)
+
+
+@app.command("delete")
+def delete_workspace(
+    workspace_id: str = typer.Argument(..., help="Workspace ID (or first 8 chars)"),
+    yes: bool = typer.Option(False, "--yes", "-y", help="Skip confirmation prompt"),
+):
+    """Delete a workspace and all its memories."""
+    client = MemClient()
+
+    # resolve short ID to full ID
+    workspaces = client.list_workspaces()
+    match = next((w for w in workspaces if w["id"].startswith(workspace_id)), None)
+    if not match:
+        console.print(f"[red]Not found:[/red] {workspace_id}")
+        raise typer.Exit(1)
+
+    if not yes:
+        console.print(f"[bold]{match['name']}[/bold]  {match['path']}")
+        typer.confirm("Delete this workspace and all its memories?", abort=True)
+
+    ok = client.delete_workspace(match["id"])
+    if ok:
+        console.print(f"[green]Deleted[/green] {match['name']} ({match['id'][:8]})")
+    else:
+        console.print(f"[red]Failed to delete[/red] {match['id'][:8]}")

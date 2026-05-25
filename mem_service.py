@@ -142,17 +142,38 @@ def cmd_start():
 
 
 def cmd_stop():
+    killed = []
+
+    # kill tracked PID first
     pid = _pid()
-    if not pid:
-        print("agent-mem is not running.")
-        return
+    if pid:
+        try:
+            os.kill(pid, signal.SIGTERM)
+            killed.append(pid)
+        except ProcessLookupError:
+            pass
+        PID_FILE.unlink(missing_ok=True)
+
+    # kill any remaining process holding port 8000
     try:
-        os.kill(pid, signal.SIGTERM)
-        PID_FILE.unlink(missing_ok=True)
-        print(_green(f"Stopped  (pid {pid})"))
-    except ProcessLookupError:
-        PID_FILE.unlink(missing_ok=True)
-        print("Process was already gone.")
+        result = subprocess.run(
+            ["lsof", "-ti", "tcp:8000"], capture_output=True, text=True
+        )
+        for p in result.stdout.strip().split():
+            try:
+                extra = int(p)
+                if extra not in killed:
+                    os.kill(extra, signal.SIGTERM)
+                    killed.append(extra)
+            except (ValueError, ProcessLookupError):
+                pass
+    except FileNotFoundError:
+        pass  # lsof not available
+
+    if killed:
+        print(_green(f"Stopped  (pid {', '.join(str(p) for p in killed)})"))
+    else:
+        print("agent-mem is not running.")
 
 
 # ── one-time setup ────────────────────────────────────────────────────────────
