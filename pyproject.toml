@@ -9,6 +9,10 @@ requires-python = ">=3.13"
 
 [project.scripts]
 mem = "cli.main:app"
+mem-service = "mem_service:main"
+
+[tool.setuptools]
+py-modules = ["mem_service"]
 
 [tool.setuptools.packages.find]
 where = ["."]
