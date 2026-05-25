@@ -66,8 +66,38 @@ def cmd_status():
         print(f"  agent-mem   {state}   pid {pid}")
         print(f"  API         {API_URL}")
         print(f"  Logs        {LOG_FILE}")
+        if ok:
+            _print_workspaces()
     else:
         print(f"  agent-mem   {_red('stopped')}")
+
+
+def _print_workspaces():
+    try:
+        import urllib.request
+        with urllib.request.urlopen(f"{API_URL}/workspaces", timeout=3) as r:
+            workspaces = json.loads(r.read())
+    except Exception:
+        return
+
+    if not workspaces:
+        print(f"\n  {_dim('No workspaces registered.')}")
+        print(f"  {_dim('Add one: mem workspace add <name> <path>')}")
+        return
+
+    print()
+    col_id   = 8
+    col_name = max(len(w["name"]) for w in workspaces)
+    col_lang = 8
+    header   = f"  {'ID':<{col_id}}  {'NAME':<{col_name}}  {'LANG':<{col_lang}}  PATH"
+    print(_dim(header))
+    print(_dim(f"  {'-'*col_id}  {'-'*col_name}  {'-'*col_lang}  {'-'*30}"))
+    for w in workspaces:
+        lang = w.get("language") or "—"
+        path = w["path"]
+        if len(path) > 45:
+            path = "…" + path[-44:]
+        print(f"  {w['id'][:col_id]:<{col_id}}  {w['name']:<{col_name}}  {lang:<{col_lang}}  {path}")
 
 
 def cmd_start():
