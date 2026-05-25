@@ -43,11 +43,11 @@ def add_workspace(
 
 @app.command("init")
 def init_workspaces(
-    root: str = typer.Argument(..., help="Parent folder containing repo subdirectories"),
+    root: str = typer.Argument(None, help="Parent folder containing repo subdirectories (default: current directory)"),
     git_only: bool = typer.Option(True, "--git-only/--all", help="Only register dirs with a .git folder"),
 ):
     """Scan a folder and register every subdirectory as a workspace."""
-    root_path = Path(root).expanduser().resolve()
+    root_path = Path(root).expanduser().resolve() if root else Path.cwd()
     if not root_path.is_dir():
         console.print(f"[red]Not a directory:[/red] {root_path}")
         raise typer.Exit(1)
